@@ -1,0 +1,2 @@
+# Проверка текущего значения
+print(spark.conf.get("spark.sql.shuffle.partitions"))
