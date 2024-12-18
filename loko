@@ -1,0 +1,19 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.master("local").getOrCreate()
+df = spark.range(5000000)
+df.show()
+
+# Проверка и вывод количества партиций
+num_partitions = df.rdd.getNumPartitions()
+print(f"Количество партиций: {num_partitions}")
+
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.master("local").getOrCreate()
+df = spark.range(5000000)
+df.orderBy(df.columns[0], ascending=False).show(20)
+
+# Проверка и вывод количества партиций
+num_partitions = df.rdd.getNumPartitions()
+print(f"Количество партиций: {num_partitions}")
