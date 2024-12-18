@@ -1,11 +1,10 @@
-import findspark
-findspark.init()
-
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, spark_partition_id
 
-# Создание SparkSession
-spark = SparkSession.builder.appName("Partitioning Example").getOrCreate()
+# Инициализация Spark сессии
+spark = SparkSession.builder \
+    .appName("Partition Testing") \
+    .getOrCreate()
 
 # Создание DataFrame
 data = [
@@ -13,29 +12,33 @@ data = [
     (2, "Bob", 45),
     (3, "Charlie", 29),
     (4, "David", 38),
-    (5, "Eve", 31),
+    (5, "Eve", 27),
     (6, "Frank", 42),
-    (7, "Grace", 36),
-    (8, "Hannah", 33),
-    (9, "Ian", 41),
-    (10, "Jack", 37)
+    (7, "Grace", 33),
+    (8, "Hank", 40),
+    (9, "Ivy", 31),
+    (10, "John", 36)
 ]
 
 columns = ["id", "name", "age"]
 
 df = spark.createDataFrame(data, columns)
 
-# Партицирование данных
-partitioned_df = df.repartition(3, col("age"))
+# Проверка количества партиций до переразбиения
+print(f"Number of partitions before repartition: {df.rdd.getNumPartitions()}")
 
-# Проверка плана выполнения
-partitioned_df.explain(True)
+# Применение функции repartition
+num_partitions = 4
+df_repartitioned = df.repartition(num_partitions)
 
-# Проверка данных в каждой партиции
-def print_partition_id(partition_id, iterator):
-    print(f"Partition ID: {partition_id}")
-    for record in iterator:
-        print(record)
+# Проверка количества партиций после переразбиения
+print(f"Number of partitions after repartition: {df_repartitioned.rdd.getNumPartitions()}")
 
-# Использование mapPartitions с collect для вывода данных
-partitioned_df.rdd.zipWithIndex().map(lambda x: (x[1] % 3, x[0])).groupByKey().map(lambda x: (x[0], list(x[1]))).collect().foreach(lambda x: print_partition_id(x[0], x[1]))
+# Добавление столбца с идентификатором партиции для проверки
+df_repartitioned_with_partition_id = df_repartitioned.withColumn("partition_id", spark_partition_id())
+
+# Вывод данных с идентификатором партиции
+df_repartitioned_with_partition_id.show(truncate=False)
+
+# Остановка Spark сессии
+spark.stop()
