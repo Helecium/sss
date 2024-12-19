@@ -1,5 +1,2 @@
-# Проверка текущего значения
-print(spark.conf.get("spark.sql.shuffle.partitions"))
-
-# Установка нового значения
-spark.conf.set("spark.sql.shuffle.partitions", 1)
+num_partitions = df.rdd.getNumPartitions()
+print(f"Количество партиций: {num_partitions}")
